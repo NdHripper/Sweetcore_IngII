@@ -1,67 +1,82 @@
 <?php
+// Configurar sesiones para Windows primero
+if (!file_exists('sessions')) {
+    mkdir('sessions', 0777, true);
+}
+ini_set('session.save_path', __DIR__ . '/sessions');
+
+// Debug: mostrar todos los errores
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
+// Verificar si es POST
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    http_response_code(405);
+    header('Content-Type: application/json');
+    echo json_encode(['success' => false, 'message' => 'Método no permitido']);
+    exit();
+}
+
+// Forzar JSON
 header('Content-Type: application/json');
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Incluir la clase de base de datos
-    require_once 'database.php';
+try {
+    // Incluir configuración
+    include 'config.php';
     
-    // Obtener y validar datos
-    $username = trim($_POST['username']);
-    $email = filter_var(trim($_POST['email']), FILTER_VALIDATE_EMAIL);
-    $password = $_POST['password'];
-    $confirm_password = $_POST['confirm-password'];
+    // Obtener datos
+    $username = trim($_POST['username'] ?? '');
+    $email = trim($_POST['email'] ?? '');
+    $password = $_POST['password'] ?? '';
+    $confirm_password = $_POST['confirm-password'] ?? '';
     
     // Validaciones
-    if (empty($username) || empty($email) || empty($password) || empty($confirm_password)) {
-        echo json_encode(['success' => false, 'message' => 'Todos los campos son obligatorios.']);
-        exit;
+    if (empty($username) || empty($email) || empty($password)) {
+        echo json_encode(['success' => false, 'message' => 'Todos los campos son obligatorios']);
+        exit();
     }
-    
-    if (!$email) {
-        echo json_encode(['success' => false, 'message' => 'El formato del email no es válido.']);
-        exit;
-    }
-    
+
     if ($password !== $confirm_password) {
-        echo json_encode(['success' => false, 'message' => 'Las contraseñas no coinciden.']);
-        exit;
+        echo json_encode(['success' => false, 'message' => 'Las contraseñas no coinciden']);
+        exit();
     }
-    
+
     if (strlen($password) < 6) {
-        echo json_encode(['success' => false, 'message' => 'La contraseña debe tener al menos 6 caracteres.']);
-        exit;
+        echo json_encode(['success' => false, 'message' => 'La contraseña debe tener al menos 6 caracteres']);
+        exit();
+    }
+
+    // Conectar a la base de datos
+    $db = getDB();
+    
+    // Verificar si usuario existe
+    $stmt = $db->prepare("SELECT id FROM users WHERE username = ? OR email = ?");
+    $stmt->execute([$username, $email]);
+    
+    if ($stmt->fetch()) {
+        echo json_encode(['success' => false, 'message' => 'El usuario o email ya existe']);
+        exit();
+    }
+
+    // Insertar nuevo usuario
+    $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+    $stmt = $db->prepare("INSERT INTO users (username, email, password) VALUES (?, ?, ?)");
+    
+    if ($stmt->execute([$username, $email, $hashedPassword])) {
+        echo json_encode(['success' => true, 'message' => 'Usuario registrado exitosamente']);
+    } else {
+        echo json_encode(['success' => false, 'message' => 'Error al registrar el usuario']);
     }
     
-    try {
-        $db = new Database();
-        $conn = $db->getConnection();
-        
-        // Verificar si el usuario o email ya existen
-        $checkStmt = $conn->prepare("SELECT id FROM users WHERE username = :username OR email = :email");
-        $checkStmt->execute([':username' => $username, ':email' => $email]);
-        
-        if ($checkStmt->fetch()) {
-            echo json_encode(['success' => false, 'message' => 'El usuario o email ya existe.']);
-            exit;
-        }
-        
-        // Hash de la contraseña
-        $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-        
-        // Insertar nuevo usuario
-        $stmt = $conn->prepare("INSERT INTO users (username, email, password) VALUES (:username, :email, :password)");
-        $stmt->execute([
-            ':username' => $username,
-            ':email' => $email,
-            ':password' => $hashedPassword
-        ]);
-        
-        echo json_encode(['success' => true, 'message' => 'Usuario registrado con éxito.']);
-        
-    } catch(PDOException $e) {
-        echo json_encode(['success' => false, 'message' => 'Error en el registro: ' . $e->getMessage()]);
-    }
-} else {
-    echo json_encode(['success' => false, 'message' => 'Método no permitido.']);
+} catch (Exception $e) {
+    // Log del error técnico
+    error_log("Error en register.php: " . $e->getMessage());
+    
+    // Mensaje amigable para el usuario
+    http_response_code(500);
+    echo json_encode([
+        'success' => false, 
+        'message' => 'Error en el sistema. Por favor intenta nuevamente.'
+    ]);
 }
 ?>

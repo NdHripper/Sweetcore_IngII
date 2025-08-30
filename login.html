@@ -53,16 +53,18 @@
                 <div class="login-form-wrapper">
                     <h2 class="section-title">Welcome Back</h2>
                     <p class="description">Sign in to your account to continue</p>
-                    
-                    <form action="login.php" method="POST" class="login-form">
-    <div class="form-group">
-        <label for="email">Email Address</label>
-        <input type="email" id="email" name="email" class="form-input" placeholder="Your email" required>
-    </div>
-    <div class="form-group">
-        <label for="password">Password</label>
-        <input type="password" id="password" name="password" class="form-input" placeholder="Your password" required>
-    </div>
+
+                    <form id="LoginForm" form action="login.php" method="POST" class="login-form">
+                        <div class="form-group">
+                            <label for="email">Email Address</label>
+                            <input type="email" id="email" name="email" class="form-input" placeholder="Your email"
+                                required>
+                        </div>
+                        <div class="form-group">
+                            <label for="password">Password</label>
+                            <input type="password" id="password" name="password" class="form-input"
+                                placeholder="Your password" required>
+                        </div>
                         <div class="form-options">
                             <label class="checkbox-container">
                                 <input type="checkbox" id="remember">
@@ -72,7 +74,7 @@
                             <a href="#" class="forgot-password">Forgot password?</a>
                         </div>
                         <button type="submit" class="submit-button">Sign In</button>
-                        
+
                         <div class="register-link">
                             <p>Don't have an account? <a href="register.html">Register now</a></p>
                         </div>
@@ -100,39 +102,39 @@
 
     <script src="script.js"></script>
     <script>
-document.querySelector('.login-form').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    
-    const submitButton = this.querySelector('.submit-button');
-    const originalText = submitButton.textContent;
-    
-    submitButton.textContent = 'Iniciando sesión...';
-    submitButton.disabled = true;
-    
-    try {
-        const formData = new FormData(this);
-        
-        const response = await fetch('login.php', {
-            method: 'POST',
-            body: formData
+        document.querySelector('.login-form').addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const submitButton = this.querySelector('.submit-button');
+            const originalText = submitButton.textContent;
+
+            submitButton.textContent = 'Iniciando sesión...';
+            submitButton.disabled = true;
+
+            try {
+                const formData = new FormData(this);
+
+                const response = await fetch('login.php', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert(result.message);
+                    window.location.href = 'index.html';
+                } else {
+                    alert('Error: ' + result.message);
+                }
+            } catch (error) {
+                alert('Error de conexión: ' + error.message);
+            } finally {
+                submitButton.textContent = originalText;
+                submitButton.disabled = false;
+            }
         });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            alert(result.message);
-            window.location.href = 'index.html';
-        } else {
-            alert('Error: ' + result.message);
-        }
-    } catch (error) {
-        alert('Error de conexión: ' + error.message);
-    } finally {
-        submitButton.textContent = originalText;
-        submitButton.disabled = false;
-    }
-});
-</script>
+    </script>
 </body>
 
 </html>

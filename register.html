@@ -53,24 +53,28 @@
                 <div class="login-form-wrapper">
                     <h2 class="section-title">Create Account</h2>
                     <p class="description">Join us to enjoy our delicious desserts</p>
-                    
+
                     <form id="registerForm" action="register.php" method="POST" class="login-form">
-    <div class="form-group">
-        <label for="username">Username</label>
-        <input type="text" id="username" name="username" class="form-input" placeholder="Your username" required>
-    </div>
-    <div class="form-group">
-        <label for="email">Email Address</label>
-        <input type="email" id="email" name="email" class="form-input" placeholder="Your email" required>
-    </div>
-    <div class="form-group">
-        <label for="password">Password</label>
-        <input type="password" id="password" name="password" class="form-input" placeholder="Your password" required>
-    </div>
-    <div class="form-group">
-        <label for="confirm-password">Confirm Password</label>
-        <input type="password" id="confirm-password" name="confirm-password" class="form-input" placeholder="Confirm your password" required>
-    </div>
+                        <div class="form-group">
+                            <label for="username">Username</label>
+                            <input type="text" id="username" name="username" class="form-input"
+                                placeholder="Your username" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Email Address</label>
+                            <input type="email" id="email" name="email" class="form-input" placeholder="Your email"
+                                required>
+                        </div>
+                        <div class="form-group">
+                            <label for="password">Password</label>
+                            <input type="password" id="password" name="password" class="form-input"
+                                placeholder="Your password" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="confirm-password">Confirm Password</label>
+                            <input type="password" id="confirm-password" name="confirm-password" class="form-input"
+                                placeholder="Confirm your password" required>
+                        </div>
                         <div class="form-options">
                             <label class="checkbox-container">
                                 <input type="checkbox" id="terms" required>
@@ -79,7 +83,7 @@
                             </label>
                         </div>
                         <button type="submit" class="submit-button">Create Account</button>
-                        
+
                         <div class="register-link">
                             <p>Already have an account? <a href="login.html">Login here</a></p>
                         </div>
@@ -104,64 +108,11 @@
             </p>
         </div>
     </footer>
-
-    <script>
-        document.getElementById('registerForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const submitButton = this.querySelector('.submit-button');
-            const originalText = submitButton.textContent;
-            
-            // Validar que las contraseñas coincidan
-            const password = document.getElementById('password').value;
-            const confirmPassword = document.getElementById('confirm-password').value;
-            
-            if (password !== confirmPassword) {
-                alert('Las contraseñas no coinciden.');
-                return;
-            }
-            
-            // Obtener datos del formulario
-            const username = document.getElementById('username').value;
-            const email = document.getElementById('email').value;
-            
-            // Cambiar texto del botón
-            submitButton.textContent = 'Registrando...';
-            submitButton.disabled = true;
-            
-            // Simular registro (en lugar de enviar a PHP)
-            setTimeout(() => {
-                // Guardar en localStorage (solo para demostración)
-                const users = JSON.parse(localStorage.getItem('sweetcore_users') || '[]');
-                
-                // Verificar si el usuario ya existe
-                const userExists = users.some(user => user.email === email || user.username === username);
-                
-                if (userExists) {
-                    alert('El usuario o email ya existe.');
-                } else {
-                    // Agregar nuevo usuario
-                    users.push({
-                        id: Date.now(),
-                        username: username,
-                        email: email,
-                        password: btoa(password) // No seguro, solo para demo
-                    });
-                    
-                    localStorage.setItem('sweetcore_users', JSON.stringify(users));
-                    alert('✅ Usuario registrado con éxito. Redirigiendo al login...');
-                    window.location.href = 'login.html';
-                }
-                
-                // Restaurar botón
-                submitButton.textContent = originalText;
-                submitButton.disabled = false;
-            }, 1000);
-        });
-    </script>
-    <script>
-document.querySelector('.login-form').addEventListener('submit', async function(e) {
+<script src="script.js"></script>
+ <script>
+document.getElementById('registerForm').addEventListener('submit', async function(e) {
     e.preventDefault();
+    console.log('Formulario enviado - Iniciando proceso');
     
     const submitButton = this.querySelector('.submit-button');
     const originalText = submitButton.textContent;
@@ -180,28 +131,56 @@ document.querySelector('.login-form').addEventListener('submit', async function(
     
     try {
         const formData = new FormData(this);
+        console.log('Datos del formulario:', Object.fromEntries(formData));
+        
+        // Hacer el fetch con timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
         
         const response = await fetch('register.php', {
             method: 'POST',
-            body: formData
+            body: formData,
+            signal: controller.signal
         });
         
+        clearTimeout(timeoutId);
+        console.log('Respuesta HTTP recibida. Status:', response.status);
+        
+        // Verificar si la respuesta es JSON
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            const text = await response.text();
+            console.error('La respuesta no es JSON. Contenido:', text);
+            throw new Error('El servidor devolvió una respuesta inválida');
+        }
+        
         const result = await response.json();
+        console.log('Respuesta JSON:', result);
         
         if (result.success) {
-            alert(result.message);
+            alert('✅ ' + result.message);
             window.location.href = 'login.html';
         } else {
-            alert('Error: ' + result.message);
+            alert('❌ ' + result.message);
         }
+        
     } catch (error) {
-        alert('Error de conexión: ' + error.message);
+        console.error('Error completo:', error);
+        
+        if (error.name === 'AbortError') {
+            alert('⏰ El servidor tardó demasiado en responder. Por favor intenta nuevamente.');
+        } else if (error.message.includes('JSON')) {
+            alert('❌ Error en el servidor. Por favor contacta al administrador.');
+        } else {
+            alert('🌐 Error de conexión. Verifica que estés conectado a internet.');
+        }
     } finally {
         submitButton.textContent = originalText;
         submitButton.disabled = false;
     }
 });
 </script>
+
 </body>
 
 </html>
