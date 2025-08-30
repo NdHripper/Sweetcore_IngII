@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SweetCore | Register</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="stylelogin.css">
+</head>
+
+<body>
+    <header>
+        <nav class="navbar section-content">
+            <a href="index.html" class="nav-logo">
+                <h2 class="logo-text">🧁SweetCore</h2>
+            </a>
+            <ul class="nav-menu">
+                <button id="menu-close-button" class="fas fa-times"></button>
+                <li class="nav-item">
+                    <a href="index.html" class="nav-link">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a href="index.html#about" class="nav-link">About</a>
+                </li>
+                <li class="nav-item">
+                    <a href="index.html#menu" class="nav-link">Menu</a>
+                </li>
+                <li class="nav-item">
+                    <a href="index.html#testimonials" class="nav-link">Testimonials</a>
+                </li>
+                <li class="nav-item">
+                    <a href="index.html#gallery" class="nav-link">Gallery</a>
+                </li>
+                <li class="nav-item">
+                    <a href="index.html#contact" class="nav-link">Contact</a>
+                </li>
+                <li class="nav-item">
+                    <a href="login.html" class="nav-link">Login</a>
+                </li>
+            </ul>
+            <button id="menu-open-button" class="fas fa-bars"></button>
+        </nav>
+    </header>
+
+    <main class="login-main">
+        <section class="login-section">
+            <div class="login-container section-content">
+                <div class="login-image-wrapper">
+                    <img src="images/Sweetie.png" alt="Delicious Cupcake">
+                </div>
+                <div class="login-form-wrapper">
+                    <h2 class="section-title">Create Account</h2>
+                    <p class="description">Join us to enjoy our delicious desserts</p>
+                    
+                    <form id="registerForm" action="register.php" method="POST" class="login-form">
+    <div class="form-group">
+        <label for="username">Username</label>
+        <input type="text" id="username" name="username" class="form-input" placeholder="Your username" required>
+    </div>
+    <div class="form-group">
+        <label for="email">Email Address</label>
+        <input type="email" id="email" name="email" class="form-input" placeholder="Your email" required>
+    </div>
+    <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" class="form-input" placeholder="Your password" required>
+    </div>
+    <div class="form-group">
+        <label for="confirm-password">Confirm Password</label>
+        <input type="password" id="confirm-password" name="confirm-password" class="form-input" placeholder="Confirm your password" required>
+    </div>
+                        <div class="form-options">
+                            <label class="checkbox-container">
+                                <input type="checkbox" id="terms" required>
+                                <span class="checkmark"></span>
+                                I agree to the <a href="#" class="terms-link">Terms & Conditions</a>
+                            </label>
+                        </div>
+                        <button type="submit" class="submit-button">Create Account</button>
+                        
+                        <div class="register-link">
+                            <p>Already have an account? <a href="login.html">Login here</a></p>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer-section">
+        <div class="section-content">
+            <p class="copyright-text">@ 2025 SweetCore</p>
+            <div class="social-link-list">
+                <a href="#" class="social-link"><i class="fa-brands fa-facebook"></i></a>
+                <a href="#" class="social-link"><i class="fa-brands fa-instagram"></i></a>
+                <a href="#" class="social-link"><i class="fa-brands fa-twitter"></i></a>
+            </div>
+            <p class="policy-text">
+                <a href="#" class="policy-link">Privacy policy</a>
+                <span class="separator">.</span>
+                <a href="#" class="policy-link">Refund policy</a>
+            </p>
+        </div>
+    </footer>
+
+    <script>
+        document.getElementById('registerForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const submitButton = this.querySelector('.submit-button');
+            const originalText = submitButton.textContent;
+            
+            // Validar que las contraseñas coincidan
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+            
+            if (password !== confirmPassword) {
+                alert('Las contraseñas no coinciden.');
+                return;
+            }
+            
+            // Obtener datos del formulario
+            const username = document.getElementById('username').value;
+            const email = document.getElementById('email').value;
+            
+            // Cambiar texto del botón
+            submitButton.textContent = 'Registrando...';
+            submitButton.disabled = true;
+            
+            // Simular registro (en lugar de enviar a PHP)
+            setTimeout(() => {
+                // Guardar en localStorage (solo para demostración)
+                const users = JSON.parse(localStorage.getItem('sweetcore_users') || '[]');
+                
+                // Verificar si el usuario ya existe
+                const userExists = users.some(user => user.email === email || user.username === username);
+                
+                if (userExists) {
+                    alert('El usuario o email ya existe.');
+                } else {
+                    // Agregar nuevo usuario
+                    users.push({
+                        id: Date.now(),
+                        username: username,
+                        email: email,
+                        password: btoa(password) // No seguro, solo para demo
+                    });
+                    
+                    localStorage.setItem('sweetcore_users', JSON.stringify(users));
+                    alert('✅ Usuario registrado con éxito. Redirigiendo al login...');
+                    window.location.href = 'login.html';
+                }
+                
+                // Restaurar botón
+                submitButton.textContent = originalText;
+                submitButton.disabled = false;
+            }, 1000);
+        });
+    </script>
+    <script>
+document.querySelector('.login-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const submitButton = this.querySelector('.submit-button');
+    const originalText = submitButton.textContent;
+    
+    // Validar que las contraseñas coincidan
+    const password = document.getElementById('password').value;
+    const confirmPassword = document.getElementById('confirm-password').value;
+    
+    if (password !== confirmPassword) {
+        alert('Las contraseñas no coinciden.');
+        return;
+    }
+    
+    submitButton.textContent = 'Registrando...';
+    submitButton.disabled = true;
+    
+    try {
+        const formData = new FormData(this);
+        
+        const response = await fetch('register.php', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            alert(result.message);
+            window.location.href = 'login.html';
+        } else {
+            alert('Error: ' + result.message);
+        }
+    } catch (error) {
+        alert('Error de conexión: ' + error.message);
+    } finally {
+        submitButton.textContent = originalText;
+        submitButton.disabled = false;
+    }
+});
+</script>
+</body>
+
+</html>
